@@ -68,6 +68,7 @@ def evaluate_model():
     # THIS IS INPUT AS PHOTO
     print("[INFO] Reading image...")
     image = Image.open(img_path)
+    print(image.size)
     image = image.resize((28,28))
     image = image.convert('L')
     image = image.rotate(-90)
@@ -93,5 +94,5 @@ def evaluate_model():
 # print("Time taken: {:.2f} seconds".format(elapsed_time))
 
 # ------ execution time
-excution_time = timeit.timeit(evaluate_model, number=100) # time taken to execute the statement a specified number of times. 
+excution_time = timeit.timeit(evaluate_model, number=1) # time taken to execute the statement a specified number of times. 
 print("Execution time: ", excution_time)
