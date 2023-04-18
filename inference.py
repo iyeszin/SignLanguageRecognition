@@ -1,12 +1,10 @@
 import argparse
 from model import Model
-from utils import helper
 from PIL import Image
 from matplotlib import pyplot as plt
 import numpy as np
-import pandas as pd
-import time
-import timeit
+import copy
+import cv2 as cv
 
 class_names = ["A","B","C","D","E","F","G","H","I","K","L",'M','N','O','P','Q','R','S','T','U','V','W','X','Y']
 
@@ -30,69 +28,77 @@ img_path = args["imagepath"]
 model_type = args["modeltype"]
 weight = args["weight"]
 
-# # Start the timer
-# start_time = time.time()
+# print(model_type)
 
-print(model_type)
+class Inference():
+   
+    def __init__(self):
+        super().__init__()
+        self.IMAGE_WIDTH = 28
+        self.IMAGE_HEIGHT = 28
+        self.IMAGE_CHANNELS = 1
+        self.N_IMAGES = 1
+        self.INPUT_SHAPE = (28, 28, 1)
+        self.NUMBER_OF_CLASSESS = 24
+        self.model_type = model_type
+        # self.cp_img = []
+        self.pixels = []
+        # self.model = self.model
 
-def evaluate_model():
+        self.cp_img = self.getImgCallback()
+        print(self.cp_img.size)
+        self.evaluate_model()
 
-    # ------ init model
-    if model_type == "res18":
-        model = Model.ResNet18(INPUT_SHAPE, NUMBER_OF_CLASSESS)
-    elif model_type == "res34":
-        model = Model.ResNet34(INPUT_SHAPE, NUMBER_OF_CLASSESS)
-    elif model_type == "cnn":
-        model = Model.cnn(INPUT_SHAPE, NUMBER_OF_CLASSESS)
-        # model = CNN.build_CNNmodel(input_image, NUMBER_OF_CLASSESS)
-    else:
-        print("no model is load")
-
-    model.load_weights(weight)
-
-    # ------ load data
-    # # THIS IS INPUT AS RANDOM FROM TEST DATA
-    # test_df = pd.read_csv("/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_test.csv")
-    # del test_df['label']
-    # print(test_df.shape)
-    # test_x = helper.preprocess_image(test_df.values)
-
-    # preds = model.predict(test_x)
-
-    # n=8
-    # plt.imshow(test_x[n].reshape(28,28),cmap="gray") 
-    # plt.grid(False) 
-    # print("Predicted letter is:",class_names[np.argmax(preds[n])])
+    def getImgCallback(self):
+        self.img = cv.imread(img_path)
+        self.img = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)
+        print(self.img.size)
+        self.img = cv.resize(self.img, [28, 28])
+        self.img = cv.flip(self.img, 1)
+        print(self.img.size)
+        self.cp_img = copy.deepcopy(self.img)
+        # print(self.cp_img)
+        return self.cp_img
 
 
-    # THIS IS INPUT AS PHOTO
-    print("[INFO] Reading image...")
-    image = Image.open(img_path)
-    print(image.size)
-    image = image.resize((28,28))
-    image = image.convert('L')
-    image = image.rotate(-90)
+        # self.img = Image.open(img_path)
+        # print(self.img.size)
+        # self.img = self.img.resize((28,28))
+        # self.img = self.img.convert('L')
+        # self.img = self.img.rotate(-90)
+        # self.cp_img = copy.deepcopy(self.img)
+        # self.pixels = np.array(self.img.getdata()).reshape((1,28,28))/255
 
-    pixels = np.array(image.getdata()).reshape((1,28,28))/255
-    plt.imshow(pixels.reshape((28,28)),cmap='gray')
+        # return pixels
+        # plt.imshow(pixels.reshape((28,28)),cmap='gray')
 
-    # ------ inferenece
-    if model_type == "cnn":
-        pixels = pixels.reshape(N_IMAGES, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS)
-    my_images_preds = model.predict(pixels)
-    my_images_preds = np.argmax(my_images_preds)
-    print(my_images_preds)
-    print("Predicted letter is: "+ class_names[my_images_preds])
 
-# # End the timer
-# end_time = time.time()
+    def evaluate_model(self):
+        if self.model_type == "res18":
+            self.model = Model.ResNet18(INPUT_SHAPE, NUMBER_OF_CLASSESS)
+        elif self.model_type == "res34":
+            self.model = Model.ResNet34(INPUT_SHAPE, NUMBER_OF_CLASSESS)
+        elif self.model_type == "cnn":
+            self.model = Model.cnn(INPUT_SHAPE, NUMBER_OF_CLASSESS)
+        else:
+            print("no model is load")
+    
+        #------ load data
+        # print("[INFO] Reading image...")
+        pixels = np.array(self.img).reshape((1,28,28))/255
+        print(pixels.size)
+        # plt.imshow(pixels.reshape((28,28)),cmap='gray')
 
-# # Calculate the elapsed time
-# elapsed_time = end_time - start_time
+        # ------ inferenece
+        if self.model_type == "cnn":
+            pixels = pixels.reshape(N_IMAGES, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS)
+        my_images_preds = self.model.predict(pixels)
+        my_images_preds = np.argmax(my_images_preds)
+        print(my_images_preds)
+        print("Predicted letter is: "+ class_names[my_images_preds])
 
-# # Print the elapsed time
-# print("Time taken: {:.2f} seconds".format(elapsed_time))
+# def main(args=None):
+#     inference_img = Inference()
 
-# ------ execution time
-excution_time = timeit.timeit(evaluate_model, number=1) # time taken to execute the statement a specified number of times. 
-print("Execution time: ", excution_time)
+if __name__ == '__main__':
+    inference_img = Inference()
