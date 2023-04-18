@@ -6,7 +6,7 @@ Installation
 To install the project, clone the repository and navigate to the project directory:
 
 ``` bash
-git clone https://github.com/your-username/sign-language-recognition.git
+git clone https://github.com/iyeszin/SignLanguageRecognition.git
 cd sign-language-recognition
 ```
 
