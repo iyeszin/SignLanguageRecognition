@@ -22,13 +22,13 @@ NUMBER_OF_CLASSESS = 24
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-m", "--modeltype", type=str, default = "res18", help="to specific which model architecture to train, ie, cnn, res18, res34")
+ap.add_argument("-m", "--modeltype", type=str, default = "res34", help="to specific which model architecture to train, ie, cnn, res18, res34")
 ap.add_argument("-e", "--epochs", type=int, default = 5, help="epochs num")
 ap.add_argument("-bs", "--batchsize", type=int, default = 128, help="batchsize")
-ap.add_argument("-lr", "--learningrate", type=float, default = 0.001, help="initial learning rate")
-ap.add_argument("-train", "--traindf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_train/sign_mnist_train.csv", help="path to train dataset")
-ap.add_argument("-test", "--testdf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_test/sign_mnist_test.csv", help="path to test dataset")
-ap.add_argument("-name", "--modelname", type=str, default = "./sl-cnn-weight.hdf5", help="name to specific which model to save")
+ap.add_argument("-lr", "--learningrate", type=float, default = 0.0001, help="initial learning rate")
+ap.add_argument("-train", "--traindf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_train.csv", help="path to train dataset")
+ap.add_argument("-test", "--testdf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_test.csv", help="path to test dataset")
+ap.add_argument("-name", "--modelname", type=str, default = "./res34-weight.hdf5", help="name to specific which model to save")
 args = vars(ap.parse_args())
 
 model_type = args["modeltype"]
@@ -39,25 +39,12 @@ train = args["traindf"]
 test = args["testdf"]
 mn = args["modelname"]
 
+lrate = ReduceLROnPlateau(monitor="val_loss", patience=3, factor=0.5, verbose=1)
 optimizer = Adam(learning_rate=LR)
 cce_loss = keras.losses.CategoricalCrossentropy(from_logits=False)
 
-cb_list = [
-        tf.keras.callbacks.EarlyStopping(
-            patience=5,
-            restore_best_weights=True,
-            verbose=1,
-            monitor="val_loss",
-        ),
-        tf.keras.callbacks.ReduceLROnPlateau(patience=3, factor=0.5, verbose=1),
-        tf.keras.callbacks.ModelCheckpoint(
-            f"best_acc_{mn}.h5",
-            monitor="val_loss",
-            verbose=0,
-            save_best_only=True,
-            save_weights_only=True,
-        ),
-    ]
+# Save best model weights
+save_model = ModelCheckpoint(mn, monitor='val_loss', save_best_only=True, save_weights_only=True)
 
 
 print("[INFO] Building the model...")
@@ -112,16 +99,16 @@ history = model.fit(
     validation_data=(test_x,y_test),
     validation_steps=total_test//bs,
     steps_per_epoch=total_train//bs,
-    callbacks=cb_list)
+    callbacks=[lrate, save_model])
 
-model.save('saved_models/model.h5')
+model.save('saved_models/model.hdf5')
 
 # show learning curves
 plt.plot(history.history['accuracy'], 'g-o', label='train')
 plt.plot(history.history['val_accuracy'], 'r-o', label='test')
 plt.title('Training & validation accuracy', pad=-80)
 plt.legend()
-plt.savefig('saved_models/'+mn+'_accuracy.png')
+plt.savefig(mn+'_accuracy.png')
 # plt.show()
 
 
@@ -129,5 +116,5 @@ plt.plot(history.history['loss'], 'g-o', label='train')
 plt.plot(history.history['val_loss'], 'r-o', label='test')
 plt.title('Training & validation loss', pad=-80)
 plt.legend()
-plt.savefig('saved_models/'+mn+'_loss.png')
+plt.savefig(mn+'_loss.png')
 # plt.show()
