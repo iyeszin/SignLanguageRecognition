@@ -1,7 +1,10 @@
 ## Sign Language Recognition
 
 This project aims to detect isolated Sign Language Characters by building three models, cnn, resnet18, and resnet34. The models were trained using the sign language mnist dataset, which is similar in format to the classic MNIST dataset. The training data consists of 27,455 cases, and the test data has 7172 cases. Each case represents a label (0-25) as a one-to-one map for each alphabetic letter A-Z (except for J and Z due to gesture motions). Each image is 28x28 pixels with grayscale values between 0-255.
-Installation
+
+![ASL fingering](/dataset/american_sign_language.PNG)
+
+# Installation
 
 To install the project, clone the repository and navigate to the project directory:
 
