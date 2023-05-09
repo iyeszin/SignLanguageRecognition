@@ -25,9 +25,9 @@ This command will train the resnet34 model and save the weights to a file named 
 To perform inference on a test image, run the following command:
 
 ```python
-python inference.py -img "Images/20230220_084429.jpg" -m res34 -w "weight/res34-weight.hdf5"
+python inference.py -img "Images/20230220_084429.jpg"
 ```
-This command will perform inference on the test image located at "Images/20230220_084429.jpg" using the resnet34 model with the weights loaded from the "res34-weight.hdf5" file. You can replace "res34" with "cnn" or "res18" to use the cnn or resnet18 models, respectively.
+This command will perform inference on the test image located at "Images/20230220_084429.jpg" using the model loaded from the file.
 
 # Acknowledgments
 
