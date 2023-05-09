@@ -8,6 +8,7 @@ import cv2 as cv
 from keras import models
 from utils import helper
 import mediapipe as mp
+import numpy as np
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -134,6 +135,12 @@ class Inference():
         label = np.argmax(my_images_preds)
         print(my_images_preds)
         print("Predicted letter is: "+ class_names[label])
+        if np.max(my_images_preds) > 0.9:
+            label = np.argmax(my_images_preds)
+            print("0.9 Predicted letter is: "+ class_names[label])
+        else:
+            print("ohh nooooo")
+        
 
 if __name__ == '__main__':
     inference_img = Inference(img_path)
