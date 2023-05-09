@@ -23,14 +23,6 @@ mp_model = mp_hands.Hands(
 output_dir = "output/"
 class_names = ["A","B","C","D","E","F","G","H","I","K","L",'M','N','O','P','Q','R','S','T','U','V','W','X','Y']
 
-# param
-IMAGE_WIDTH = 28
-IMAGE_HEIGHT = 28
-IMAGE_CHANNELS = 1
-N_IMAGES = 1
-
-INPUT_SHAPE = (28, 28, 1)
-NUMBER_OF_CLASSESS = 24
 MODEL_NAME = "/home/iyeszin/Documents/sl_recognizer/saved_models_res18/model.h5"
 
 # construct the argument parse and parse the arguments
