@@ -3,6 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import string
+from collections import deque
+import cv2 as cv
+
 
 letters = dict(zip(list(range(0,26)),string.ascii_lowercase))
 
@@ -43,4 +46,22 @@ def predictions_to_labels(pred):
     for p in pred:
         labels.append(unique_labels[np.argmax(p)])
     return labels
-    
+
+
+class CvFpsCalc(object):
+    def __init__(self, buffer_len=1):
+        self._start_tick = cv.getTickCount()
+        self._freq = 1000.0 / cv.getTickFrequency()
+        self._difftimes = deque(maxlen=buffer_len)
+
+    def get(self):
+        current_tick = cv.getTickCount()
+        different_time = (current_tick - self._start_tick) * self._freq
+        self._start_tick = current_tick
+
+        self._difftimes.append(different_time)
+
+        fps = 1000.0 / (sum(self._difftimes) / len(self._difftimes))
+        fps_rounded = round(fps, 2)
+
+        return fps_rounded
