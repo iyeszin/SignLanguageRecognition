@@ -151,6 +151,8 @@ def main():
                     if handedness.classification[0].label == "Right":
                         resized_image = cv.flip(resized_image, 1)
                     cv.imshow("crop", resized_image)
+                    # flip and write output image to disk
+                    cv.imwrite(f"{output_dir}/crop.jpg", cv.flip(cropped_image, 1))
                     
                     my_images_preds = helper.preprocess_image(resized_image)
                     my_images_preds = sl_classifier.predict(my_images_preds)

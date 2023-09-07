@@ -7,9 +7,12 @@ from keras.preprocessing.image import ImageDataGenerator
 from model import Model
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, StandardScaler
+from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, classification_report,confusion_matrix
 from utils import helper
+
+
 
 
 # parameters (convert into arguments)
@@ -22,13 +25,13 @@ NUMBER_OF_CLASSESS = 24
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-m", "--modeltype", type=str, default = "res34", help="to specific which model architecture to train, ie, cnn, res18, res34")
+ap.add_argument("-m", "--modeltype", type=str, default = "cnn", help="to specific which model architecture to train, ie, cnn, res18, res34")
 ap.add_argument("-e", "--epochs", type=int, default = 5, help="epochs num")
 ap.add_argument("-bs", "--batchsize", type=int, default = 128, help="batchsize")
 ap.add_argument("-lr", "--learningrate", type=float, default = 0.0001, help="initial learning rate")
-ap.add_argument("-train", "--traindf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_train.csv", help="path to train dataset")
-ap.add_argument("-test", "--testdf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_test.csv", help="path to test dataset")
-ap.add_argument("-name", "--modelname", type=str, default = "./res34-weight.hdf5", help="name to specific which model to save")
+ap.add_argument("-train", "--traindf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_train/sign_mnist_train.csv", help="path to train dataset")
+ap.add_argument("-test", "--testdf", type=str, default = "/home/iyeszin/Documents/sl_recognizer/dataset/sign_mnist_test/sign_mnist_test.csv", help="path to test dataset")
+ap.add_argument("-name", "--modelname", type=str, default = "./cnn-weight.hdf5", help="name to specific which model to save")
 args = vars(ap.parse_args())
 
 model_type = args["modeltype"]
@@ -78,25 +81,45 @@ test_x = helper.preprocess_image(test_df.values)
 x_train = train_df.values
 x_test = test_df.values
 
+# Reshape the input data to 2D
+train_x_2d = train_x.reshape(train_x.shape[0], -1)
+test_x_2d = test_x.reshape(test_x.shape[0], -1)
+
+# Scale the input data
+scaler = StandardScaler()
+scaled_train_x = scaler.fit_transform(train_x_2d)
+scaled_test_x = scaler.transform(test_x_2d)
+
+print("[INFO] Applying pca...")
+# Apply PCA for feature extraction
+pca = PCA(n_components=50)  # Choose the number of components as needed
+pca_train_x = pca.fit_transform(scaled_train_x)
+pca_test_x = pca.transform(scaled_test_x)
+
+# Reshape PCA-transformed data for data augmentation
+pca_train_x_reshape = pca_train_x.reshape(pca_train_x.shape[0], 5, 5, 2, 1)
+pca_test_x_reshape = pca_test_x.reshape(pca_test_x.shape[0], 5, 5, 2, 1)
+
+print("[INFO] Fit into generator...")
 datagen = ImageDataGenerator(
         rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
         zoom_range = 0.1, # Randomly zoom image 
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1)  # randomly shift images vertically (fraction of total height)
 
-datagen.fit(train_x)
+datagen.fit(pca_train_x_reshape)
 
 print("[INFO] Network info...")
 # showing information to input into network
-
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+model.summary()
 
 
 print("[INFO] Training the network...")
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 history = model.fit(
-    datagen.flow(train_x,y_train, batch_size = bs),
+    datagen.flow(pca_train_x_reshape,y_train, batch_size = bs),
     epochs=nb_epochs,
-    validation_data=(test_x,y_test),
+    validation_data=(pca_test_x_reshape,y_test),
     validation_steps=total_test//bs,
     steps_per_epoch=total_train//bs,
     callbacks=[lrate, save_model])
